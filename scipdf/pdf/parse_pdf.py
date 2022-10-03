@@ -8,11 +8,10 @@ from bs4 import BeautifulSoup, NavigableString
 from tqdm import tqdm, tqdm_notebook
 
 # Added [ldery] - setup tokenizer
-from spacy.tokenizer import Tokenizer
 from spacy.lang.en import English
 nlp = English()
 # Create a blank Tokenizer with just the English vocab
-tokenizer = Tokenizer(nlp.vocab)
+tokenizer = nlp.tokenizer
 
 GROBID_URL = "http://localhost:8070"  # or https://cloud.science-miner.com/grobid/ for cloud service
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -204,15 +203,12 @@ def parse_sections(article, as_list: bool = False):
                 text = "\n".join(text)
         if heading != "" or text != "":
             ref_dict = calculate_number_of_references(div)
-            if type(text)==list:
-                tokenized_text = [[str(tok) for tok in tokenizer(para)] for para in text]
-            elif type(text)==str:
-                tokenized_text = [str(tok) for tok in tokenizer(text)]
-            else:
-                raise NotImplementedError
+            tokenized_heading = list(tokenizer(heading))
+            tokenized_text = list(tokenizer(text))
             sections.append(
                 {
                     "heading": heading,
+                    "tokenized_heading": tokenized_heading,
                     "text": text,
                     "tokenized_text": tokenized_text,
                     "n_publication_ref": ref_dict["n_publication_ref"],
@@ -327,7 +323,9 @@ def convert_article_soup_to_dict(article, as_list: bool = False):
         article_dict["authors"] = parse_authors(article)
         article_dict["pub_date"] = parse_date(article)
         article_dict["title"] = title
+        article_dict["tokenized_title"] = list(tokenizer(article_dict["title"]))
         article_dict["abstract"] = parse_abstract(article)
+        article_dict["tokenized_abstract"] = list(tokenizer(article_dict["abstract"]))
         article_dict["sections"] = parse_sections(article, as_list=as_list)
         article_dict["references"] = parse_references(article)
         article_dict["figures"] = parse_figure_caption(article)
@@ -419,5 +417,3 @@ def parse_figures(
             print("Done parsing figures from PDFs!")
     else:
         print("output_folder have to be path to folder")
-
-
