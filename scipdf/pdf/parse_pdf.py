@@ -204,7 +204,12 @@ def parse_sections(article, as_list: bool = False):
                 text = "\n".join(text)
         if heading != "" or text != "":
             ref_dict = calculate_number_of_references(div)
-            tokenized_text = list(tokenizer(text))
+            if type(text)==list:
+                tokenized_text = [[str(tok) for tok in tokenizer(para)] for para in text]
+            elif type(text)==str:
+                tokenized_text = [str(tok) for tok in tokenizer(text)]
+            else:
+                raise NotImplementedError
             sections.append(
                 {
                     "heading": heading,
@@ -414,3 +419,5 @@ def parse_figures(
             print("Done parsing figures from PDFs!")
     else:
         print("output_folder have to be path to folder")
+
+
