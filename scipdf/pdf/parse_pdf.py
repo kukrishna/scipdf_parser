@@ -7,6 +7,12 @@ import requests
 from bs4 import BeautifulSoup, NavigableString
 from tqdm import tqdm, tqdm_notebook
 
+# Added [ldery] - setup tokenizer
+from spacy.tokenizer import Tokenizer
+from spacy.lang.en import English
+nlp = English()
+# Create a blank Tokenizer with just the English vocab
+tokenizer = Tokenizer(nlp.vocab)
 
 GROBID_URL = "http://localhost:8070"  # or https://cloud.science-miner.com/grobid/ for cloud service
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -73,7 +79,6 @@ def parse_pdf(
         url = "%s/api/processFulltextDocument" % grobid_url
     else:
         url = "%s/api/processHeaderDocument" % grobid_url
-
     if isinstance(pdf_path, str):
         if validate_url(pdf_path) and os.path.splitext(pdf_path)[-1].lower() != ".pdf":
             print("The input URL has to end with ``.pdf``")
@@ -111,7 +116,7 @@ def parse_authors(article):
         middlename = middlename.text.strip() if middlename is not None else ""
         lastname = author.find("surname")
         lastname = lastname.text.strip() if lastname is not None else ""
-        if middlename is not "":
+        if middlename != "":
             authors.append(firstname + " " + middlename + " " + lastname)
         else:
             authors.append(firstname + " " + lastname)
@@ -197,12 +202,14 @@ def parse_sections(article, as_list: bool = False):
                         pass
             if not as_list:
                 text = "\n".join(text)
-        if heading is not "" or text is not "":
+        if heading != "" or text != "":
             ref_dict = calculate_number_of_references(div)
+            tokenized_text = list(tokenizer(text))
             sections.append(
                 {
                     "heading": heading,
                     "text": text,
+                    "tokenized_text": tokenized_text,
                     "n_publication_ref": ref_dict["n_publication_ref"],
                     "n_figure_ref": ref_dict["n_figure_ref"],
                 }
@@ -225,7 +232,7 @@ def parse_references(article):
         title = title.text if title is not None else ""
         journal = reference.find("title", attrs={"level": "j"})
         journal = journal.text if journal is not None else ""
-        if journal is "":
+        if journal == "":
             journal = reference.find("publisher")
             journal = journal.text if journal is not None else ""
         year = reference.find("date")
@@ -238,7 +245,7 @@ def parse_references(article):
             middlename = middlename.text.strip() if middlename is not None else ""
             lastname = author.find("surname")
             lastname = lastname.text.strip() if lastname is not None else ""
-            if middlename is not "":
+            if middlename != "":
                 authors.append(firstname + " " + middlename + " " + lastname)
             else:
                 authors.append(firstname + " " + lastname)
