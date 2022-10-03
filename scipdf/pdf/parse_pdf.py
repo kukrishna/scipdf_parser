@@ -204,7 +204,14 @@ def parse_sections(article, as_list: bool = False):
         if heading != "" or text != "":
             ref_dict = calculate_number_of_references(div)
             tokenized_heading = list(tokenizer(heading))
-            tokenized_text = list(tokenizer(text))
+
+            if type(text)==list:
+                tokenized_text = [[str(tok) for tok in tokenizer(para)] for para in text]
+            elif type(text)==str:
+                tokenized_text = [str(tok) for tok in tokenizer(text)]
+            else:
+                raise NotImplementedError
+
             sections.append(
                 {
                     "heading": heading,
