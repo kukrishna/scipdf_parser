@@ -330,9 +330,9 @@ def convert_article_soup_to_dict(article, as_list: bool = False):
         article_dict["authors"] = parse_authors(article)
         article_dict["pub_date"] = parse_date(article)
         article_dict["title"] = title
-        article_dict["tokenized_title"] = list(tokenizer(article_dict["title"]))
+        article_dict["tokenized_title"] = [str(tok) for tok in tokenizer(article_dict["title"])]
         article_dict["abstract"] = parse_abstract(article)
-        article_dict["tokenized_abstract"] = list(tokenizer(article_dict["abstract"]))
+        article_dict["tokenized_abstract"] = [str(tok) for tok in tokenizer(article_dict["abstract"])]
         article_dict["sections"] = parse_sections(article, as_list=as_list)
         article_dict["references"] = parse_references(article)
         article_dict["figures"] = parse_figure_caption(article)
